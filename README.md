@@ -13,28 +13,28 @@
 
 ## Folder Structure
 
-src/
-types/
-employee.ts          # TypeScript interfaces for all data shapes
-services/
-api.ts               # Axios base config
-employeeService.ts   # Employee CRUD API calls
-insightService.ts    # Insights API calls
-pages/
-EmployeesPage.tsx    # Employee list, add, edit, delete
-InsightsPage.tsx     # Salary insights with tabs
-components/
-employees/
-EmployeeTable.tsx  # Table with edit/delete actions
-EmployeeForm.tsx   # Add/edit form
-shared/
-Navbar.tsx         # Navigation
-Pagination.tsx     # Page controls
-tests/
-setup.ts
-services/
-employeeService.test.ts
-insightService.test.ts
+    src/
+      types/
+        employee.ts          # TypeScript interfaces for all data shapes
+      services/
+        api.ts               # Axios base config
+        employeeService.ts   # Employee CRUD API calls
+        insightService.ts    # Insights API calls
+      pages/
+        EmployeesPage.tsx    # Employee list, add, edit, delete
+        InsightsPage.tsx     # Salary insights with tabs
+      components/
+        employees/
+          EmployeeTable.tsx  # Table with edit/delete actions
+          EmployeeForm.tsx   # Add/edit form
+        shared/
+          Navbar.tsx         # Navigation
+          Pagination.tsx     # Page controls
+      tests/
+        setup.ts
+        services/
+          employeeService.test.ts
+          insightService.test.ts
 
 ## Key Decisions
 
