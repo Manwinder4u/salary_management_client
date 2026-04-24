@@ -18,6 +18,16 @@ export default function Navbar() {
             >
               Employees
           </NavLink>
+          <NavLink
+            to="/insights"
+            className={({ isActive }) =>
+              isActive
+                ? 'text-blue-600 font-medium border-b-2 border-blue-600 pb-1'
+                : 'text-gray-600 hover:text-blue-600'
+            }
+            >
+              Insights
+          </NavLink>
         </div>
       </div>
     </nav>
