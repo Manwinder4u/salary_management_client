@@ -1,73 +1,71 @@
-# React + TypeScript + Vite
+# Frontend Architecture
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Tech Stack
 
-Currently, two official plugins are available:
+| Layer      | Technology                    |
+|------------|-------------------------------|
+| Framework  | React 19 + TypeScript         |
+| Build tool | Vite                          |
+| Styling    | Tailwind CSS v3               |
+| Routing    | React Router v7               |
+| HTTP       | Axios                         |
+| Testing    | Vitest + Testing Library      |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Folder Structure
 
-## React Compiler
+src/
+types/
+employee.ts          # TypeScript interfaces for all data shapes
+services/
+api.ts               # Axios base config
+employeeService.ts   # Employee CRUD API calls
+insightService.ts    # Insights API calls
+pages/
+EmployeesPage.tsx    # Employee list, add, edit, delete
+InsightsPage.tsx     # Salary insights with tabs
+components/
+employees/
+EmployeeTable.tsx  # Table with edit/delete actions
+EmployeeForm.tsx   # Add/edit form
+shared/
+Navbar.tsx         # Navigation
+Pagination.tsx     # Page controls
+tests/
+setup.ts
+services/
+employeeService.test.ts
+insightService.test.ts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Key Decisions
 
-## Expanding the ESLint configuration
+### 1. Service layer separation
+API calls live in `services/` — components never call axios directly.
+Same separation of concerns as Rails service objects.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 2. TypeScript interfaces
+All data shapes defined in `types/employee.ts`.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 3. Page components as coordinators
+Page components manage state and orchestrate service calls.
+Child components (Table, Form, Pagination) are purely presentational.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 4. TDD on service layer
+Service functions are unit tested with mocked axios.
+Tests are fast, deterministic, and isolated from the backend.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Component Responsibilities
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+| Component       | Responsibility                              |
+|-----------------|---------------------------------------------|
+| EmployeesPage   | State management, orchestrates CRUD actions |
+| EmployeeTable   | Displays employee rows, emits edit/delete   |
+| EmployeeForm    | Controlled form, emits submit/cancel        |
+| Pagination      | Previous/next controls, emits page change   |
+| InsightsPage    | Tab state, calls insight services           |
+| Navbar          | Navigation links with active state          |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Testing Strategy
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Tested the service layer (functions that call Rails API) using Vitest.
+Component tests skipped for assessment scope — service tests cover the
+critical data-fetching logic. Component tests would be the natural next step.
