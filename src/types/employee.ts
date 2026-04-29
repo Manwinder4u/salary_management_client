@@ -49,3 +49,16 @@ export interface SalaryByJobTitle {
   min: number
   max: number
 }
+
+export interface SalaryByDepartment {
+  department: string
+  min: number
+  max: number
+  average: number
+  count: number
+}
+
+export interface HeadcountByCountry {
+  country: string
+  count: number
+}

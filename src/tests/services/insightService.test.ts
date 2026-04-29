@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import api from '../../services/api'
 import {
   getSalaryByCountry,
-  getSalaryByJobTitle
+  getSalaryByJobTitle,
+  getSalaryByDepartment, 
+  getHeadcountByCountry
 } from '../../services/insightService'
 
 vi.mock('../../services/api')
@@ -60,5 +62,35 @@ describe('insightService', () => {
     })
   })
 
-
+  describe("getSalaryByDepartment", () => {
+    it("calls GET /insights/salary_by_department with country param", async () => {
+      const mockData = [
+        { department: "Engineering", min: 50000, max: 70000, average: 60000, count: 2 }
+      ]
+      mockedApi.get = vi.fn().mockResolvedValue({ data: mockData })
+  
+      const result = await getSalaryByDepartment("India")
+  
+      expect(mockedApi.get).toHaveBeenCalledWith(
+        "/insights/salary_by_department",
+        { params: { country: "India" } }
+      )
+      expect(result).toEqual(mockData)
+    })
+  })
+  
+  describe("getHeadcountByCountry", () => {
+    it("calls GET /insights/headcount_by_country", async () => {
+      const mockData = [
+        { country: "India", count: 1240 },
+        { country: "USA", count: 890 }
+      ]
+      mockedApi.get = vi.fn().mockResolvedValue({ data: mockData })
+  
+      const result = await getHeadcountByCountry()
+  
+      expect(mockedApi.get).toHaveBeenCalledWith("/insights/headcount_by_country")
+      expect(result).toEqual(mockData)
+    })
+  })
 })

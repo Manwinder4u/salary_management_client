@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import type { SalaryByCountry, SalaryByJobTitle } from '../types/employee'
-import { getSalaryByCountry, getSalaryByJobTitle } from '../services/insightService'
+import type { SalaryByCountry, SalaryByJobTitle, SalaryByDepartment, HeadcountByCountry } from '../types/employee'
+import { getSalaryByCountry, getSalaryByJobTitle, getHeadcountByCountry, getSalaryByDepartment } from '../services/insightService'
 
 const COUNTRIES = ['India', 'USA', 'UK', 'Canada', 'Australia', 'Germany', 'France', 'Singapore']
 
-type Tab = 'country' | 'job_title'
+type Tab = "country" | "job_title" | "department" | "headcount"
 
 export default function InsightsPage() {
   const [activeTab, setActiveTab]         = useState<Tab>('country')
@@ -12,16 +12,32 @@ export default function InsightsPage() {
   const [jobTitle, setJobTitle]           = useState('')
   const [countryStats, setCountryStats]   = useState<SalaryByCountry | null>(null)
   const [jobTitleStats, setJobTitleStats] = useState<SalaryByJobTitle | null>(null)
+  const [departmentStats, setDepartmentStats] = useState<SalaryByDepartment[]>([])
+  const [headcountStats, setHeadcountStats]   = useState<HeadcountByCountry[]>([])
   const [loading, setLoading]             = useState(false)
   const [error, setError]                 = useState<string | null>(null)
 
-  const handleTabChange = (tab: Tab) => {
+  // inside handleTabChange — fetch headcount when tab opens
+  const handleTabChange = async (tab: Tab) => {
     setActiveTab(tab)
-    setCountry('')
-    setJobTitle('')
+    setCountry("")
+    setJobTitle("")
     setCountryStats(null)
     setJobTitleStats(null)
+    setDepartmentStats([])
     setError(null)
+
+    if (tab === "headcount") {
+      setLoading(true)
+      try {
+        const result = await getHeadcountByCountry()
+        setHeadcountStats(result)
+      } catch {
+        setError("Failed to load headcount data")
+      } finally {
+        setLoading(false)
+      }
+    }
   }
 
   const handleSearch = async () => {
@@ -43,6 +59,12 @@ export default function InsightsPage() {
     } finally {
       setLoading(false)
     }
+
+    if (activeTab === "department") {
+      if (!country) return
+      const stats = await getSalaryByDepartment(country)
+      setDepartmentStats(stats)
+    }
   }
   const handleCountryChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value
@@ -63,7 +85,7 @@ export default function InsightsPage() {
     }
   }
 
-  const isSearchDisabled = activeTab === 'country' ? !country : !country || !jobTitle
+  // const isSearchDisabled = activeTab === 'country' ? !country : !country || !jobTitle
 
 
   return (
@@ -72,19 +94,22 @@ export default function InsightsPage() {
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6">
-        {(['country', 'job_title'] as Tab[]).map(tab => (
-          <button
-            key={tab}
-            onClick={() => handleTabChange(tab)}
-            className={`px-6 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              activeTab === tab
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {tab === 'country' ? 'By Country' : 'By Job Title'}
-          </button>
-        ))}
+      {(["country", "job_title", "department", "headcount"] as Tab[]).map(tab => (
+        <button
+          key={tab}
+          onClick={() => handleTabChange(tab)}
+          className={`px-6 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            activeTab === tab
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          {tab === "country" ? "By Country"
+            : tab === "job_title" ? "By Job Title"
+            : tab === "department" ? "By Department"
+            : "Headcount"}
+        </button>
+      ))}
       </div>
 
       {/* Search */}
@@ -173,6 +198,63 @@ export default function InsightsPage() {
                 <p className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</p>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "department" && departmentStats.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-700 mb-3">
+            Salary by Department — {country}
+          </h3>
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="min-w-full bg-white text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  {["Department", "Employees", "Min", "Average", "Max"].map(h => (
+                    <th key={h} className="px-4 py-3 text-left font-medium text-gray-600">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {departmentStats.map(dept => (
+                  <tr key={dept.department} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-800">{dept.department}</td>
+                    <td className="px-4 py-3 text-gray-600">{dept.count}</td>
+                    <td className="px-4 py-3 text-gray-600">${dept.min.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-gray-600">${dept.average.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-gray-600">${dept.max.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "headcount" && headcountStats.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-700 mb-3">
+            Workforce Distribution by Country
+          </h3>
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="min-w-full bg-white text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  {["Country", "Employees"].map(h => (
+                    <th key={h} className="px-4 py-3 text-left font-medium text-gray-600">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {headcountStats.map(item => (
+                  <tr key={item.country} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-800">{item.country}</td>
+                    <td className="px-4 py-3 text-gray-600">{item.count.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
