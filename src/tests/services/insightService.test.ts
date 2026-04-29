@@ -36,5 +36,29 @@ describe('insightService', () => {
       expect(mockedApi.get).toHaveBeenCalledWith('/insights/salary_by_job_title', { params: { country: 'India', job_title: 'Engineer' } })
       expect(result).toEqual(mockData)
     })
+
+    it("returns min, max, average and count for job title in country", async () => {
+      const mockData = {
+        country: "India",
+        job_title: "Engineer",
+        average: 60_000,
+        count: 2,
+        min: 50_000,
+        max: 70_000
+      }
+      mockedApi.get = vi.fn().mockResolvedValue({ data: mockData })
+  
+      const result = await getSalaryByJobTitle("India", "Engineer")
+  
+      expect(mockedApi.get).toHaveBeenCalledWith("/insights/salary_by_job_title", {
+        params: { country: "India", job_title: "Engineer" }
+      })
+      expect(result.min).toEqual(50_000)
+      expect(result.max).toEqual(70_000)
+      expect(result.average).toEqual(60_000)
+      expect(result.count).toEqual(2)
+    })
   })
+
+
 })

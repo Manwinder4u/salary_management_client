@@ -46,4 +46,6 @@ export interface SalaryByJobTitle {
   job_title: string
   average: number
   count: number
+  min: number
+  max: number
 }

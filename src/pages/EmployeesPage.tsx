@@ -13,19 +13,30 @@ export default function EmployeesPage() {
   const [showForm, setShowForm]     = useState(false)
   const [editEmployee, setEditEmployee] = useState<Employee | null>(null)
   const [saving, setSaving]         = useState(false)
+  const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 400)
+  
+    return () => clearTimeout(timer)
+  }, [search])
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const result = await getEmployees(page, 20)
+      const result = await getEmployees(page, 20, debouncedSearch)
       setData(result)
     } catch {
-      setError('Failed to load employees')
+      setError("Failed to load employees")
     } finally {
       setLoading(false)
     }
-  }, [page])
+  }, [page, debouncedSearch])
 
   useEffect(() => {
     fetchEmployees()
@@ -85,12 +96,25 @@ export default function EmployeesPage() {
             </p>
           )}
         </div>
-        <button
-          onClick={handleAddNew}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-        >
-          + Add Employee
-        </button>
+        
+        <div className='flex items-center gap-3'>
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={search}
+            onChange={e => {
+              setSearch(e.target.value)
+              setPage(1)
+            }}
+            className="border border-gray-300 rounded px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={handleAddNew}
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+          >
+            + Add Employee
+          </button>
+        </div>
       </div>
 
       {error && (

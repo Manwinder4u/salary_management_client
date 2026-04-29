@@ -74,4 +74,34 @@ describe('employeeService', () => {
       expect(mockedApi.delete).toHaveBeenCalledWith('/employees/1')
     })
   })
+
+  describe("getEmployees with search", () => {
+    it("calls GET /employees with search param", async () => {
+      const mockData = {
+        data: [],
+        meta: { total_count: 0, current_page: 1, total_pages: 1, per_page: 20 }
+      }
+      mockedApi.get = vi.fn().mockResolvedValue({ data: mockData })
+
+      await getEmployees(1, 20, "Manwinder")
+
+      expect(mockedApi.get).toHaveBeenCalledWith("/employees", {
+        params: { page: 1, per_page: 20, search: "Manwinder" }
+      })
+    })
+
+    it("does not send search param when empty", async () => {
+      const mockData = {
+        data: [],
+        meta: { total_count: 0, current_page: 1, total_pages: 1, per_page: 20 }
+      }
+      mockedApi.get = vi.fn().mockResolvedValue({ data: mockData })
+  
+      await getEmployees(1, 20, "")
+  
+      expect(mockedApi.get).toHaveBeenCalledWith("/employees", {
+        params: { page: 1, per_page: 20, search: undefined }
+      })
+    })
+  })
 })

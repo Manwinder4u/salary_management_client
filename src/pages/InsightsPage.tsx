@@ -161,10 +161,12 @@ export default function InsightsPage() {
           <h3 className="text-lg font-semibold text-gray-700 mb-3">
             "{jobTitleStats.job_title}" in {jobTitleStats.country}
           </h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             {[
-              { label: 'Employees with this title', value: jobTitleStats.count.toLocaleString() },
-              { label: 'Average Salary',            value: `$${jobTitleStats.average.toLocaleString()}` }
+              { label: "Employees with this title", value: jobTitleStats.count.toLocaleString() },
+              { label: "Average Salary", value: `$${jobTitleStats.average.toLocaleString()}` },
+              { label: "Minimum Salary", value: `$${jobTitleStats.min.toLocaleString()}` },
+              { label: "Maximum Salary", value: `$${jobTitleStats.max.toLocaleString()}` }
             ].map(stat => (
               <div key={stat.label} className="bg-white rounded-lg border border-gray-200 p-5">
                 <p className="text-sm text-gray-500">{stat.label}</p>

@@ -1,8 +1,10 @@
 import api from './api'
 import type { Employee, EmployeeFormData, PaginatedEmployees } from '../types/employee'
 
-export const getEmployees = async (page = 1, perPage = 20): Promise<PaginatedEmployees> => {
-  const { data } = await api.get('/employees', { params: { page, per_page: perPage } })
+export const getEmployees = async (page = 1, perPage = 20, search = ""): Promise<PaginatedEmployees> => {
+  const { data } = await api.get("/employees", {
+    params: { page, per_page: perPage, search: search || undefined }
+  })
   return data
 }
 
