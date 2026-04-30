@@ -1,6 +1,11 @@
-import { useState } from 'react'
-import type { SalaryByCountry, SalaryByJobTitle, SalaryByDepartment, HeadcountByCountry } from '../types/employee'
-import { getSalaryByCountry, getSalaryByJobTitle, getHeadcountByCountry, getSalaryByDepartment } from '../services/insightService'
+import { useState } from "react"
+import type { SalaryByCountry, SalaryByJobTitle, SalaryByDepartment, HeadcountByCountry } from "../types/employee"
+import { 
+  getSalaryByCountry, 
+  getSalaryByJobTitle, 
+  getSalaryByDepartment,
+  getHeadcountByCountry 
+} from "../services/insightService"
 
 const COUNTRIES = ['India', 'USA', 'UK', 'Canada', 'Australia', 'Germany', 'France', 'Singapore']
 
@@ -25,6 +30,7 @@ export default function InsightsPage() {
     setCountryStats(null)
     setJobTitleStats(null)
     setDepartmentStats([])
+    setHeadcountStats([])
     setError(null)
 
     if (tab === "headcount") {
@@ -41,52 +47,51 @@ export default function InsightsPage() {
   }
 
   const handleSearch = async () => {
-    if (!country) return
+    if (!country || !jobTitle) return
     setLoading(true)
     setError(null)
 
     try {
-      if (activeTab === 'country') {
-        const stats = await getSalaryByCountry(country)
-        setCountryStats(stats)
-      } else {
-        if (!jobTitle) return
-        const stats = await getSalaryByJobTitle(country, jobTitle)
-        setJobTitleStats(stats)
-      }
+      const stats = await getSalaryByJobTitle(country, jobTitle)
+      setJobTitleStats(stats)
     } catch {
-      setError('Failed to load insights')
+      setError("Failed to load insights")
     } finally {
       setLoading(false)
     }
-
-    if (activeTab === "department") {
-      if (!country) return
-      const stats = await getSalaryByDepartment(country)
-      setDepartmentStats(stats)
-    }
   }
+
   const handleCountryChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value
     setCountry(selected)
     setCountryStats(null)
+    setDepartmentStats([])
     setError(null)
-  
+
     if (!selected) return
-  
-    setLoading(true)
-    try {
-      const stats = await getSalaryByCountry(selected)
-      setCountryStats(stats)
-    } catch {
-      setError('Failed to load insights')
-    } finally {
-      setLoading(false)
+
+    if (activeTab === "country") {
+      setLoading(true)
+      try {
+        const stats = await getSalaryByCountry(selected)
+        setCountryStats(stats)
+      } catch {
+        setError("Failed to load insights")
+      } finally {
+        setLoading(false)
+      }
+    } else if (activeTab === "department") {
+      setLoading(true)
+      try {
+        const stats = await getSalaryByDepartment(selected)
+        setDepartmentStats(stats)
+      } catch {
+        setError("Failed to load department insights")
+      } finally {
+        setLoading(false)
+      }
     }
   }
-
-  // const isSearchDisabled = activeTab === 'country' ? !country : !country || !jobTitle
-
 
   return (
     <div>
@@ -94,63 +99,67 @@ export default function InsightsPage() {
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6">
-      {(["country", "job_title", "department", "headcount"] as Tab[]).map(tab => (
-        <button
-          key={tab}
-          onClick={() => handleTabChange(tab)}
-          className={`px-6 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
-            activeTab === tab
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          {tab === "country" ? "By Country"
-            : tab === "job_title" ? "By Job Title"
-            : tab === "department" ? "By Department"
-            : "Headcount"}
-        </button>
-      ))}
+        {(["country", "job_title", "department", "headcount"] as Tab[]).map(tab => (
+          <button
+            key={tab}
+            onClick={() => handleTabChange(tab)}
+            className={`px-6 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === tab
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab === "country" ? "By Country"
+              : tab === "job_title" ? "By Job Title"
+              : tab === "department" ? "By Department"
+              : "Headcount"}
+          </button>
+        ))}
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-        <div className="flex gap-4 items-end">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-            <select
-              value={country}
-              onChange={activeTab === 'country' ? handleCountryChange : e => setCountry(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select Country</option>
-              {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+      {activeTab !== "headcount" && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <div className="flex gap-4 items-end">
+            <div className="w-3/5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+              <select
+                value={country}
+                onChange={activeTab === "country" || activeTab === "department" 
+                  ? handleCountryChange 
+                  : e => setCountry(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Country</option>
+                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
 
           {activeTab === 'job_title' && (
-            <>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-                <input
-                  type="text"
-                  value={jobTitle}
-                  onChange={e => setJobTitle(e.target.value)}
-                  placeholder="e.g. Software Engineer"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                  <input
+                    type="text"
+                    value={jobTitle}
+                    onChange={e => setJobTitle(e.target.value)}
+                    placeholder="e.g. Software Engineer"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
 
-              <button
-                onClick={handleSearch}
-                disabled={!country || !jobTitle || loading}
-                className="px-6 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-              >
+                <button
+                  onClick={handleSearch}
+                  disabled={!country || !jobTitle || loading}
+                  className="px-6 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
+                >
                 {loading ? 'Loading...' : 'Search'}
-              </button>
-            </>
-          )}
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
@@ -259,11 +268,13 @@ export default function InsightsPage() {
         </div>
       )}
 
-      {!countryStats && !jobTitleStats && !loading && (
+      {/* Empty State */}
+      {!countryStats && !jobTitleStats && departmentStats.length === 0 && headcountStats.length === 0 && !loading && (
         <div className="text-center py-12 text-gray-400 text-sm">
-          {activeTab === 'country'
-            ? 'Select a country to view salary insights'
-            : 'Select a country and enter a job title to view insights'}
+          {activeTab === "country" && "Select a country to view salary insights"}
+          {activeTab === "job_title" && "Select a country and enter a job title to view insights"}
+          {activeTab === "department" && "Select a country to view department salary breakdown"}
+          {activeTab === "headcount" && "Loading workforce distribution..."}
         </div>
       )}
     </div>
